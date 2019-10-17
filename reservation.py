@@ -6,12 +6,13 @@ Created on Tue Oct 15 17:36:21 2019
 """
 ## insert and delete algorithm
 class Event:
-    def __init__(self,time,clients,site_id):
+    def __init__(self,time,clients,site_id,operation):
         self.time = time
         self.client = clients
         self.status = 'pending'
         self.flights = []
         self.site_id = site_id
+        self.operation = operation
       
     ##serielizr the event class
     def convert_to_string(self):

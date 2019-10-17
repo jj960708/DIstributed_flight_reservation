@@ -19,17 +19,39 @@ def hasRec(T,eR,i,j):
     return T[i][j] >= eR
 
 ## insert a event
-def add(x):
+def insert(client,flights):
+    global C,T
     C += 1
     T[site_id][site_id] = C
+    e = Event(C,client,site_id,'insert')
+    e.flights =[int(f) for f in flights.split(',')]
+    partial_log.append(e)
+    reservation_dic[client] = e.flights 
+    return 
+
+def delete(client,flights):
+    global C,T
+    C += 1
+    T[site_id][site_id] = C
+    e = Event(C,client,site_id,'delete')
+    e.flights =[int(f) for f in flights.split(',')]
+    partial_log.append(e)
+    reservation_dic.pop(client)
     return 
     
  
     
     
-    
-def send_msg(sock,knownhosts,msg):
+
+def send_msg(sock,knownhosts,site,msg):
     msg = pickle.dumps(msg)
+    IP_address = knownhosts['hosts'][site]['ip_address'] 
+    Port = int(knownhosts['hosts'][site]['udp_start_port'])
+    sock.sendto(msg, (IP_address, Port))
+    
+def send_all(sock,knownhosts,msg):
+    msg = pickle.dumps(msg)
+    
     
     for host in knownhosts['hosts']:
         if host == container:
@@ -55,16 +77,14 @@ def recv_msg(sock):
 container = sys.argv[1]
 inputfile = open('knownhosts.json','r')
 knownhosts = json.load(inputfile)
-reservation_dic = [] ## dictionary to keep the local event
+reservation_dic = {} ## dictionary to keep the local event
+partial_log = []
 flight_info = [2 for i in range(20)] ## the local list to store the remaining seats of the flight
-
+T = [[0 for i in range(2)] for i in range(2)]
 ## determine the site ID
-site_id = 0
+site_id = int(sys.argv[2])
 C = 0 ##local clock
-for host in range(len(knownhosts['hosts'])):
-    if host == container:
-        break
-    site_id += 1
+
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
 UDP_address = knownhosts['hosts'][container]['ip_address'] 
@@ -78,24 +98,21 @@ while True:
     
     if msg == 'Q':
         break
-    if msg.startswith('reserve'):
+    elif msg.startswith('reserve'):
         info = msg.split(' ')
-        e = Event(C,info[1],site_id)
-        for flight in info[2].split(','):
-            e.flights.append(int(flight))
-        temp = e.convert_to_string()
-        print(temp)
-        reservation_dic.append(e)
-        print(e.time,e.client,e.flights)
+        
+        insert(info[1],info[2])
+        print(reservation_dic,C)
+        
+    elif msg.startswith('send'):
+        sent_to = msg.split(' ')[1]
+        send_msg(sock,knownhosts,sent_to,msg)
+    
         
         
-    if msg == 'M':
-        arr = [[1,2,3]]
-        send_msg(sock,knownhosts,arr)
+    elif msg.startswith('sendall'):
         
-    else:
-        
-        send_msg(sock,knownhosts,msg)
+        send_all(sock,knownhosts,msg)
     
 
 sock.close()

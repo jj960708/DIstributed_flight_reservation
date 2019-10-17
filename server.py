@@ -11,18 +11,18 @@ import socket
 import sys
 import os 
 import pickle
-
+from reservation import Event 
 #container = sys.argv[1]
-class reservation:
-    def __init__(self,time,clients):
-        self.time = time
-        self.client = clients
-        self.status = 'pending'
-        self.flights = []
+
 
 def hasRec(T,eR,i,j):
     return T[i][j] >= eR
 
+## insert a event
+def add(x):
+    C += 1
+    T[site_id][site_id] = C
+    return 
     
  
     
@@ -56,20 +56,22 @@ container = sys.argv[1]
 inputfile = open('knownhosts.json','r')
 knownhosts = json.load(inputfile)
 reservation_dic = [] ## dictionary to keep the local event
+flight_info = [2 for i in range(20)] ## the local list to store the remaining seats of the flight
 
 ## determine the site ID
-SITE_ID = 0
-local_time = 0
+site_id = 0
+C = 0 ##local clock
 for host in range(len(knownhosts['hosts'])):
     if host == container:
         break
-    SITE_ID == 1
+    site_id += 1
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) 
 UDP_address = knownhosts['hosts'][container]['ip_address'] 
 
 UDP_PORT = int(knownhosts['hosts'][container]['udp_start_port'])
 sock.bind((UDP_address, UDP_PORT))
+
 t1 = threading.Thread(target=recv_msg,args=(sock,)).start()
 while True:
     msg = input()
@@ -78,10 +80,11 @@ while True:
         break
     if msg.startswith('reserve'):
         info = msg.split(' ')
-        e = reservation(local_time,info[1])
+        e = Event(C,info[1],site_id)
         for flight in info[2].split(','):
-            e.flights.append(flight)
-        local_time += 1
+            e.flights.append(int(flight))
+        temp = e.convert_to_string()
+        print(temp)
         reservation_dic.append(e)
         print(e.time,e.client,e.flights)
         

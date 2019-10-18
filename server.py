@@ -35,7 +35,7 @@ def delete(client,flights):
     C += 1
     T[site_id][site_id] = C
     e = Event(C,client,site_id,'delete')
-    e.flights =[int(f) for f in flights.split(',')]
+    e.flights = flights
     partial_log.append(e)
     reservation_dic.pop(client)
     return 
@@ -131,9 +131,9 @@ def receive(receivemsg):
             T[i][j] = max(T[i][j], T_receive[i][j])
 
    
-
+    
     partial_log.extend(NE)
-   
+    
     for eR in partial_log:
         know_eR = True
         for i in range(len(T)):
@@ -206,9 +206,20 @@ while True:
     elif msg.startswith('send'):
         sent_to = msg.split(' ')[1]
         send(sent_to)
-        print('hello')
        # send_msg(sock,knownhosts,sent_to,msg)
        
+    elif msg.startswith('cancel'):
+        client = msg.split(' ')[1]
+        if client in reservation_dic:
+            delete(client,reservation_dic[client])
+            print('Reservation for',client,'cancelled.')
+        else:
+            print('The client has no reservation.')
+        
+    elif msg.startswith('view'):
+        for client,flights in sorted(reservation_dic.items(),key = lambda x:x[0]):
+            print(client,flights)
+    
         
         
     elif msg.startswith('sendall'):

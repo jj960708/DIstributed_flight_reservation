@@ -160,7 +160,7 @@ def recv_msg(sock):
             pass
     
     
-container = sys.argv[1]
+site_id = int(sys.argv[1])
 inputfile = open('knownhosts.json','r')
 knownhosts = json.load(inputfile)
 reservation_dic = {} ## dictionary to keep the local event
@@ -172,9 +172,11 @@ T = [[0 for i in range(2)] for i in range(2)]
 ID = 0
 id_dic = {}
 for host in knownhosts['hosts']:
+    if ID == site_id:
+        container = host
     id_dic[host] = ID
     ID += 1
-site_id = id_dic[container]
+
 print(id_dic)
 
 ##local clock
